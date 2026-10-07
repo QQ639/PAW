@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAW · ติดตามสำนวนคดี</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{--pri:#14532d;--pri2:#166534;--acc:#16a34a;--acc-soft:#dcfce7;--bg:#f1f7f2;--card:#fff;--line:#d9e6dc;--text:#17231b;--muted:#64746a;--danger:#b42318;--warn:#b25e09}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5}
+  header{background:var(--pri);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+  .logo{background:var(--acc-soft);color:var(--pri);font-weight:700;border-radius:8px;padding:2px 10px;letter-spacing:1px;cursor:pointer}
+  header h1{font-size:16px;margin:0;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  main{max-width:1150px;margin:0 auto;padding:16px}
+  .btn{font:inherit;border:1px solid var(--line);background:#fff;color:var(--text);border-radius:8px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;white-space:nowrap}
+  .btn:hover{border-color:#b9cdbf}
+  .btn.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+  .btn.dark{background:var(--pri2);border-color:var(--pri2);color:#fff}
+  .btn.danger{color:var(--danger)}
+  .btn.sm{padding:4px 10px;font-size:13px}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .card h3{margin:0 0 10px;font-size:16px;color:var(--pri)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:#fff;border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:12px 14px}
+  .stat b{display:block;font-size:22px;color:var(--pri)}
+  .stat span{color:var(--muted);font-size:13px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .filters input{flex:1;min-width:200px}
+  input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--text);width:100%}
+  input:focus,select:focus,textarea:focus{outline:2px solid #bbf7d0;border-color:var(--acc)}
+  .filters select{width:auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .case{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:box-shadow .15s}
+  .case:hover{box-shadow:0 4px 14px rgba(20,83,45,.1)}
+  .case .no{font-weight:700;color:var(--pri);font-size:17px}
+  .seq{display:inline-block;background:var(--acc-soft);color:var(--pri);font-weight:600;font-size:12px;border-radius:6px;padding:0 7px;margin-right:6px}
+  .muted{color:var(--muted);font-size:13px}
+  .chip{display:inline-block;font-size:12px;border-radius:999px;padding:1px 8px;background:#eef3ef;color:var(--pri2);margin:2px 4px 2px 0}
+  .chip.cn{background:#fde8e8;color:#9b1c1c}.chip.la{background:#e6f0fb;color:#1e4e8c}.chip.th{background:#e0f2e6;color:#166534}
+  .st{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:1px 8px;background:#eceff1;color:#555;white-space:nowrap}
+  .st.seize{background:#fde8e8;color:#9b1c1c}.st.freeze{background:#fff1dc;color:#9a4f05}.st.release{background:var(--acc-soft);color:var(--pri2)}
+  .money{font-weight:600;color:var(--danger)}
+  .appt-line{font-size:13px;margin-top:6px;color:var(--warn)}
+  .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .toolbar h2{margin:0;flex:1;font-size:20px;color:var(--pri);min-width:160px}
+  dl.info{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;margin:0}
+  dl.info dt{color:var(--muted)} dl.info dd{margin:0;font-weight:500}
+  .tbl{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:500;font-size:13px;white-space:nowrap}
+  td select{width:auto;padding:3px 6px;font-size:13px}
+  .two{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  .qrbox{text-align:center}
+  .qrbox #qr{display:inline-block;padding:8px;background:#fff;border:1px solid var(--line);border-radius:8px}
+  .qrbox #qr img,.qrbox #qr canvas{width:170px!important;height:170px!important}
+  .file{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+  .file a{color:var(--pri2);flex:1;word-break:break-all}
+  .appt{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+  .appt input{width:auto;margin-top:4px}
+  .appt.done .t{text-decoration:line-through;color:var(--muted)}
+  .badge{font-size:12px;border-radius:6px;padding:0 6px}
+  .badge.over{background:#fde8e8;color:var(--danger)} .badge.soon{background:#fff1dc;color:var(--warn)}
+  form .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
+  label .req{color:var(--danger)}
+  .rep{border:1px dashed var(--line);border-radius:10px;padding:10px;margin-bottom:8px;position:relative;background:#f8fbf8}
+  .rep .rm{position:absolute;top:6px;right:6px}
+  .rep .fg{padding-right:34px}
+  .r-item{border-style:solid;border-left:4px solid var(--acc);background:#fff}
+  .r-item .fg{padding-right:0}
+  .r-item .rm{position:static}
+  .rep-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px}
+  .rep-head b{color:var(--pri)}
+  .sub{font-size:13px;font-weight:600;color:var(--pri2);margin:8px 0 4px;padding-bottom:2px;border-bottom:1px solid var(--line)}
+  .empty{text-align:center;color:var(--muted);padding:30px}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--pri);color:#fff;padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20;max-width:90vw}
+  #toast.show{opacity:1}
+  .hdr{display:flex;gap:8px;align-items:center}.hdr[hidden]{display:none}
+  .who{font-size:13px;opacity:.9;white-space:nowrap}
+  .login{max-width:400px;margin:40px auto}
+  .login label{margin-top:10px}
+  header .btn.ghost{background:transparent;color:#fff;border-color:#ffffff40}
+  .adm{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .adm b{flex:1}
+  .demo{background:#fff6e0;border:1px solid #f0d9a4;color:#7a5a12;border-radius:8px;padding:6px 12px;font-size:13px;margin-bottom:12px}
+  @media (max-width:760px){.two{grid-template-columns:1fr}dl.info{grid-template-columns:110px 1fr}header h1{font-size:14px}}
+</style>
+</head>
+<body>
+<div id="boot" hidden data-case="<?= caseParam ?>" data-url="<?= appUrl ?>"></div>
+<header>
+  <span class="logo" onclick="showList()">PAW</span>
+  <h1>ระบบติดตามสำนวนคดี</h1>
+  <div id="hdr" class="hdr" hidden>
+    <span class="who" id="who"></span>
+    <button class="btn sm ghost" id="bAdm" onclick="showAdmins()" hidden>จัดการผู้ใช้</button>
+    <button class="btn sm ghost" onclick="logout()">ออก</button>
+    <button class="btn primary sm" onclick="showForm()">+ เพิ่มสำนวน</button>
+  </div>
+</header>
+<main id="app"><div class="empty">กำลังโหลด…</div></main>
+<div id="toast"></div>
+
+<script>
+const BANKS = ['ธนาคารกรุงเทพ','ธนาคารกสิกรไทย','ธนาคารกรุงไทย','ธนาคารไทยพาณิชย์','ธนาคารกรุงศรีอยุธยา',
+  'ธนาคารทหารไทยธนชาต (ttb)','ธนาคารออมสิน','ธ.ก.ส.','ธนาคารอาคารสงเคราะห์','ธนาคารยูโอบี','ธนาคารซีไอเอ็มบี ไทย',
+  'ธนาคารเกียรตินาคินภัทร','ธนาคารทิสโก้','ธนาคารแลนด์ แอนด์ เฮ้าส์','ธนาคารไอซีบีซี (ไทย)','ธนาคารอิสลามแห่งประเทศไทย',
+  'ธนาคารไทยเครดิต','ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย)','ซิตี้แบงก์','ทรูมันนี่ วอลเล็ต','พร้อมเพย์','อื่น ๆ'];
+const NATS = ['จีน','ลาว','ไทย','อื่น ๆ'];
+const NAT_CLS = {'จีน':'cn','ลาว':'la','ไทย':'th'};
+const STATUSES = ['ยึด','อายัด','ปลดอายัด'];
+const ST_CLS = {'ยึด':'seize','อายัด':'freeze','ปลดอายัด':'release'};
+const APPT_TYPES = ['นัดพบพนักงานสอบสวน','ให้ปากคำเพิ่มเติม','ส่งเอกสาร/หลักฐาน','ขออายัดบัญชี','ขอปลดอายัด','ติดตามความคืบหน้า','นัดไกล่เกลี่ย','นัดศาล','อื่น ๆ'];
+
+/* ---------- boot / API ---------- */
+const bootEl = document.getElementById('boot');
+const clean = v => (v && v.indexOf('<' + '?') !== 0) ? v : '';
+const BOOT = { caseId: clean(bootEl.dataset.case), appUrl: clean(bootEl.dataset.url) };
+/* ===== ตั้งค่าสำหรับ GitHub Pages: วาง URL /exec ของ Apps Script ระหว่าง '' ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbwla4w08oYolMxedV-L555WswJvu3KrHmPhndnfJlSIAZGEb5-P_rbkhnkAsM-NUlP2hg/exec';
+/* ============================================================================ */
+const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+const IS_REMOTE = !IS_GAS && /^https:\/\//.test(API_URL);
+if (!BOOT.caseId && !IS_GAS) { try { BOOT.caseId = new URLSearchParams(location.search).get('case') || ''; } catch (e) {} }
+const appUrl = () => BOOT.appUrl || location.href.split('?')[0].split('#')[0];
+const caseUrl = id => appUrl() + '?case=' + encodeURIComponent(id);
+
+const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const lsSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) {} };
+let TOKEN = lsGet('paw_token');
+const gas = (fn, ...args) => new Promise((res, rej) => google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](...args));
+async function remote(fn, ...args) {
+  let r;
+  try { r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ fn, args }) }); } // ไม่ใส่ header → ไม่ติด CORS preflight
+  catch (e) { throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ตรวจ API_URL และอินเทอร์เน็ต'); }
+  let j; try { j = await r.json(); } catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับไม่ถูกต้อง — ตรวจว่า deploy แบบ "ทุกคน" แล้ว'); }
+  if (!j.ok) throw new Error(j.error);
+  return j.data;
+}
+const pub = (fn, ...args) => IS_GAS ? gas(fn, ...args) : IS_REMOTE ? remote(fn, ...args) : Mock[fn](...args); // ไม่ต้องล็อกอิน
+async function call(fn, ...args) { // ต้องล็อกอิน
+  try { return await (IS_GAS ? gas('api', TOKEN, fn, args) : IS_REMOTE ? remote('api', TOKEN, fn, args) : Mock.api(TOKEN, fn, args)); }
+  catch (e) {
+    if (errMsg(e).indexOf('SESSION_EXPIRED') >= 0) { endSession(); showLogin('หมดเวลาการใช้งาน กรุณาเข้าสู่ระบบใหม่'); throw new Error('กรุณาเข้าสู่ระบบใหม่'); }
+    throw e;
+  }
+}
+
+const Mock = (() => { // โหมดทดลอง เมื่อเปิดไฟล์นอก Apps Script (ไม่มีความปลอดภัยจริง)
+  const KEY = 'paw_demo_v3'; const files = {};
+  const get = (k, d) => { try { return JSON.parse(localStorage.getItem(KEY + k) || d); } catch (e) { return JSON.parse(d); } };
+  const put = (k, v) => { try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch (e) {} };
+  let cases = get('_cases', '[]'), admins = get('_admins', '[]'), sess = get('_sess', '{}');
+  const save = () => { put('_cases', cases); put('_admins', admins); put('_sess', sess); };
+  const h = pw => 'demo:' + btoa(unescape(encodeURIComponent(pw)));
+  const chk = pw => { if (String(pw || '').length < 6) throw new Error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); };
+  const same = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const list = () => admins.map(a => ({ name: a.name, hasPw: !!a.hash, role: a.role === 'admin' ? 'admin' : 'user' }));
+  const nAdmin = () => admins.filter(a => a.role === 'admin' && a.hash).length;
+  const addFile = (id, f) => { (files[id] = files[id] || []).unshift(Object.assign({ url: '#', updated: new Date().toISOString() }, f)); return files[id]; };
+  const core = {
+    listCases: () => cases.slice().sort((a, b) => b.year - a.year || b.seq - a.seq),
+    getCase: id => cases.find(c => c.id === id) || null,
+    saveCase: d => {
+      const now = new Date().toISOString();
+      if (d.id) { const c = cases.find(x => x.id === d.id); Object.assign(c, d, { damage: Number(d.damage) || 0, updatedAt: now, updatedBy: d.actor }); save(); return c; }
+      const year = Number(d.year) || thisBE();
+      const seq = cases.filter(c => c.year === year).reduce((m, c) => Math.max(m, c.seq), 0) + 1;
+      const c = Object.assign({}, d, { id: 'demo-' + Date.now(), seq, year, damage: Number(d.damage) || 0, folderUrl: '', createdAt: now, updatedAt: now, createdBy: d.actor, updatedBy: d.actor });
+      cases.push(c); save(); return c;
+    },
+    deleteCase: id => { cases = cases.filter(c => c.id !== id); save(); return true; },
+    listFiles: id => files[id] || [],
+    uploadFile: (id, name, mime) => addFile(id, { name, mime }),
+    createDoc: (id, title) => addFile(id, { name: title, mime: 'application/vnd.google-apps.document' }),
+    listAdmins: list,
+    addAdmin: (n, pw, role) => { n = String(n || '').trim(); if (!n) throw new Error('กรุณากรอกชื่อผู้ใช้'); chk(pw);
+      if (admins.some(a => same(a.name, n))) throw new Error('มีชื่อ "' + n + '" อยู่แล้ว — กรุณาใช้ชื่ออื่น');
+      admins.push({ name: n, hash: h(pw), role: role === 'admin' ? 'admin' : 'user' }); save(); return list(); },
+    setRole: (n, role) => { const a = admins.find(x => x.name === n); role = role === 'admin' ? 'admin' : 'user';
+      if (role === 'user' && a.role === 'admin' && nAdmin() <= 1) throw new Error('ต้องมี ADMIN อย่างน้อย 1 คน'); a.role = role; save(); return list(); },
+    setPassword: (n, pw) => { chk(pw); admins.find(a => a.name === n).hash = h(pw); save(); return list(); },
+    renameAdmin: (o, n) => { n = String(n || '').trim(); if (!n) throw new Error('กรุณากรอกชื่อใหม่');
+      if (admins.some(a => a.name !== o && same(a.name, n))) throw new Error('มีชื่อ "' + n + '" อยู่แล้ว — กรุณาใช้ชื่ออื่น');
+      admins.find(a => a.name === o).name = n; cases.forEach(c => { if (c.admin === o) c.admin = n; }); save(); return list(); },
+    removeAdmin: n => { const a = admins.find(x => x.name === n); if (a && a.role === 'admin' && nAdmin() <= 1) throw new Error('ต้องมี ADMIN อย่างน้อย 1 คน');
+      admins = admins.filter(x => x.name !== n); save(); return list(); }
+  };
+  const login = (n, pw) => {
+    const a = admins.find(x => same(x.name, String(n || '')));
+    if (!a || !a.hash || a.hash !== h(String(pw || ''))) throw new Error(a && !a.hash ? 'ชื่อนี้ยังไม่มีรหัสผ่าน — กรุณาติดต่อ ADMIN' : 'ชื่อหรือรหัสผ่านไม่ถูกต้อง');
+    const token = 't' + Date.now() + Math.random().toString(36).slice(2); sess[token] = a.name; save();
+    return { token, name: a.name, role: a.role === 'admin' ? 'admin' : 'user' };
+  };
+  return {
+    bootstrap: async () => ({ needsSetup: nAdmin() === 0 }),
+    setupFirst: async (n, pw) => { if (nAdmin() > 0) throw new Error('ตั้งค่าครั้งแรกไปแล้ว'); chk(pw);
+      const a = admins.find(x => same(x.name, String(n || ''))); if (a) { a.hash = h(pw); a.role = 'admin'; } else core.addAdmin(n, pw, 'admin'); save(); return login(n, pw); },
+    login: async (n, pw) => login(n, pw),
+    logout: async t => { delete sess[t]; save(); return true; },
+    api: async (t, fn, args) => {
+      const u = sess[t], me = admins.find(a => a.name === u && a.hash); if (!me) throw new Error('SESSION_EXPIRED');
+      if (['addAdmin', 'renameAdmin', 'removeAdmin', 'setPassword', 'setRole'].includes(fn) && me.role !== 'admin') throw new Error('เฉพาะ ADMIN เท่านั้น');
+      args = args || [];
+      if (fn === 'saveCase') args[0] = Object.assign({}, args[0], { actor: u });
+      if (fn === 'removeAdmin' && args[0] === u) throw new Error('ลบชื่อของตัวเองไม่ได้');
+      const out = core[fn](...args);
+      if (fn === 'renameAdmin' && args[0] === u) { sess[t] = String(args[1]).trim(); save(); }
+      return JSON.parse(JSON.stringify(out));
+    }
+  };
+})();
+
+/* ---------- helpers ---------- */
+const app = document.getElementById('app');
+let CASES = [];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const thisBE = () => new Date().getFullYear() + 543;
+const pad = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmtDate = s => s ? new Date(s + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const fmtMoney = n => Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const natLabel = s => s.nationality === 'อื่น ๆ' ? (s.nationalityOther || 'อื่น ๆ') : (s.nationality || '');
+const bankLabel = i => i.bank === 'อื่น ๆ' ? (i.bankOther || 'อื่น ๆ') : (i.bank || '');
+const apptText = a => [a.type, a.detail].filter(Boolean).join(' — ');
+const caseTitle = c => c.caseNo ? 'คดีที่ ' + c.caseNo : 'ยังไม่ระบุเลขคดี';
+const seqLabel = c => 'ลำดับที่ ' + c.seq + '/' + c.year;
+const itemsOf = c => c.items || [];
+const stationNames = c => [...new Set(itemsOf(c).map(i => i.station).filter(Boolean))].join(', ');
+const stChip = s => `<span class="st ${ST_CLS[s] || ''}">${esc(s || 'ยังไม่ดำเนินการ')}</span>`;
+function nextAppt(c) {
+  const t = todayStr();
+  return (c.appointments || []).filter(a => !a.done && a.date && a.date >= t)
+    .sort((x, y) => (x.date + (x.time || '')).localeCompare(y.date + (y.time || '')))[0];
+}
+function toast(msg, ms = 2400) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), ms); }
+function errMsg(e) { return (e && e.message) || String(e); }
+let ADMINS = [], NOPW = new Set(), ROLES = {};
+let ROLE = lsGet('paw_role');
+const isAdmin = () => ROLE === 'admin';
+let CURRENT = lsGet('paw_user');
+function setAdmins(list) { ADMINS = list.map(a => a.name); NOPW = new Set(list.filter(a => !a.hasPw).map(a => a.name)); ROLES = {}; list.forEach(a => ROLES[a.name] = a.role); if (ROLES[CURRENT]) { ROLE = ROLES[CURRENT]; lsSet('paw_role', ROLE); } }
+function startSession(r) { TOKEN = r.token; CURRENT = r.name; ROLE = r.role; lsSet('paw_role', ROLE); lsSet('paw_token', TOKEN); lsSet('paw_user', CURRENT); lsSet('paw_user_last', CURRENT); renderHdr(); }
+function endSession() { TOKEN = ''; CURRENT = ''; ROLE = ''; lsSet('paw_role', ''); lsSet('paw_token', ''); lsSet('paw_user', ''); CASES = []; ADMINS = []; renderHdr(); }
+function renderHdr() { document.getElementById('hdr').hidden = !TOKEN; document.getElementById('bAdm').hidden = !isAdmin(); document.getElementById('who').textContent = CURRENT ? '👤 ' + CURRENT + (isAdmin() ? ' (ADMIN)' : '') : ''; }
+async function logout() { try { await pub('logout', TOKEN); } catch (e) {} endSession(); showLogin(); }
+async function refresh() { const r = await Promise.all([call('listCases'), call('listAdmins')]); CASES = r[0]; setAdmins(r[1]); renderHdr(); }
+const demoBar = () => (IS_GAS || IS_REMOTE) ? '' : '<div class="demo">โหมดทดลอง — ข้อมูลเก็บในเบราว์เซอร์นี้เท่านั้น (ใส่ API_URL ใน index.html เพื่อใช้งานจริง)</div>';
+
+function bahtText(num) {
+  num = Math.round(Number(num || 0) * 100) / 100;
+  if (!num) return 'ศูนย์บาทถ้วน';
+  const d = ['', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า'], p = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน'];
+  const read = (s, prefixed) => {
+    let out = '';
+    if (s.length > 6) { out += read(s.slice(0, -6), false) + 'ล้าน'; s = s.slice(-6); prefixed = true; }
+    const n = s.length;
+    for (let i = 0; i < n; i++) {
+      const x = +s[i], pos = n - 1 - i; if (!x) continue;
+      if (pos === 1 && x === 1) out += 'สิบ';
+      else if (pos === 1 && x === 2) out += 'ยี่สิบ';
+      else if (pos === 0 && x === 1 && (prefixed || (n > 1 && Number(s.slice(0, -1)) > 0))) out += 'เอ็ด';
+      else out += d[x] + p[pos];
+    }
+    return out;
+  };
+  const baht = Math.floor(num), st = Math.round((num - baht) * 100);
+  return (baht ? read(String(baht), false) + 'บาท' : '') + (st ? read(String(st), false) + 'สตางค์' : 'ถ้วน');
+}
+
+function qrDataUrl(text, size = 512) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:absolute;left:-9999px';
+  document.body.appendChild(div);
+  new QRCode(div, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+  const url = div.querySelector('canvas').toDataURL('image/png');
+  div.remove();
+  return url;
+}
+
+/* ---------- list view ---------- */
+const F = { q: '', year: '', nat: '', st: '', ad: '' };
+const adminNames = () => [...new Set([...ADMINS, ...CASES.map(c => c.admin).filter(Boolean)])];
+function showList() {
+  window.scrollTo(0, 0);
+  const t = todayStr(), in7 = addDays(t, 7);
+  const upcoming = [], overdue = [];
+  CASES.forEach(c => (c.appointments || []).forEach(a => {
+    if (a.done || !a.date) return;
+    (a.date >= t ? upcoming : overdue).push({ c, a });
+  }));
+  const byDate = (x, y) => (x.a.date + (x.a.time || '')).localeCompare(y.a.date + (y.a.time || ''));
+  upcoming.sort(byDate); overdue.sort(byDate);
+  const week = upcoming.filter(x => x.a.date <= in7).length;
+  const total = CASES.reduce((s, c) => s + (Number(c.damage) || 0), 0);
+  const cnt = s => CASES.reduce((n, c) => n + itemsOf(c).filter(i => (i.status || '') === s).length, 0);
+  const years = [...new Set(CASES.map(c => c.year))].sort((a, b) => b - a);
+  const apptRows = [...overdue.map(x => Object.assign({ over: true }, x)), ...upcoming].slice(0, 12);
+
+  app.innerHTML = `${demoBar()}
+  <div class="stats">
+    <div class="stat"><b>${CASES.length}</b><span>สำนวนทั้งหมด</span></div>
+    <div class="stat"><b>${fmtMoney(total)}</b><span>ความเสียหายรวม (บาท)</span></div>
+    <div class="stat"><b>${cnt('ยึด')}</b><span>บัญชีที่ยึด</span></div>
+    <div class="stat"><b>${cnt('อายัด')}</b><span>บัญชีที่อายัด</span></div>
+    <div class="stat"><b>${cnt('ปลดอายัด')}</b><span>บัญชีที่ปลดอายัด</span></div>
+    <div class="stat"><b>${week}</b><span>นัดภายใน 7 วัน</span></div>
+    <div class="stat"><b style="color:${overdue.length ? 'var(--danger)' : 'var(--pri)'}">${overdue.length}</b><span>นัดเลยกำหนด</span></div>
+  </div>
+  ${apptRows.length ? `<div class="card"><h3>นัดดำเนินการที่ต้องติดตาม</h3><div class="tbl"><table><tbody>
+    ${apptRows.map(x => `<tr style="cursor:pointer" data-id="${esc(x.c.id)}">
+      <td style="white-space:nowrap">${fmtDate(x.a.date)} ${esc(x.a.time || '')}
+        ${x.over ? '<span class="badge over">เลยกำหนด</span>' : x.a.date <= in7 ? '<span class="badge soon">ใกล้ถึง</span>' : ''}</td>
+      <td style="white-space:nowrap"><span class="seq">${x.c.seq}/${x.c.year}</span><b>${esc(x.c.caseNo || '-')}</b></td><td>${esc(apptText(x.a))}</td></tr>`).join('')}
+  </tbody></table></div></div>` : ''}
+  <div class="filters">
+    <input id="q" placeholder="ค้นหา: ลำดับ / เลขคดี / ผู้รับผิดชอบ / ผู้ต้องหา / พาสปอร์ต / เลขบัญชี / สถานี" value="${esc(F.q)}">
+    <select id="fy"><option value="">ทุกปี</option>${years.map(y => `<option ${String(y) === F.year ? 'selected' : ''}>${y}</option>`).join('')}</select>
+    <select id="fn"><option value="">ทุกสัญชาติ</option>${NATS.map(n => `<option ${n === F.nat ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    <select id="fa"><option value="">ทุกผู้รับผิดชอบ</option>${adminNames().map(a => `<option ${a === F.ad ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select>
+    <select id="fs"><option value="">ทุกสถานะบัญชี</option>${[...STATUSES, 'ยังไม่ดำเนินการ'].map(s => `<option ${s === F.st ? 'selected' : ''}>${s}</option>`).join('')}</select>
+  </div>
+  <div id="list"></div>`;
+  app.querySelectorAll('tr[data-id]').forEach(tr => tr.onclick = () => showDetail(tr.dataset.id));
+  document.getElementById('q').oninput = e => { F.q = e.target.value; renderList(); };
+  document.getElementById('fy').onchange = e => { F.year = e.target.value; renderList(); };
+  document.getElementById('fn').onchange = e => { F.nat = e.target.value; renderList(); };
+  document.getElementById('fa').onchange = e => { F.ad = e.target.value; renderList(); };
+  document.getElementById('fs').onchange = e => { F.st = e.target.value; renderList(); };
+  renderList();
+}
+
+function renderList() {
+  const q = F.q.trim().toLowerCase(), qd = q.replace(/\D/g, '');
+  const rows = CASES.filter(c => {
+    if (F.year && String(c.year) !== F.year) return false;
+    if (F.nat && !(c.suspects || []).some(s => s.nationality === F.nat)) return false;
+    if (F.ad && c.admin !== F.ad) return false;
+    if (F.st && !itemsOf(c).some(i => (i.status || 'ยังไม่ดำเนินการ') === F.st)) return false;
+    if (!q) return true;
+    const hay = [c.caseNo, c.seq + '/' + c.year, c.notes, c.admin,
+      ...itemsOf(c).flatMap(i => [i.station, i.investigator, i.caseRef, i.phone, i.accName, i.accNo, bankLabel(i)]),
+      ...(c.suspects || []).flatMap(s => [s.name, s.passport, s.nationalityOther])].join(' ').toLowerCase();
+    if (hay.includes(q)) return true;
+    return qd.length >= 4 && itemsOf(c).some(i => String(i.accNo || '').replace(/\D/g, '').includes(qd));
+  });
+  const el = document.getElementById('list');
+  if (!rows.length) { el.innerHTML = `<div class="empty">${CASES.length ? 'ไม่พบสำนวนที่ตรงกับการค้นหา' : 'ยังไม่มีสำนวน — กด “+ เพิ่มสำนวน” เพื่อเริ่ม'}</div>`; return; }
+  el.innerHTML = '<div class="grid">' + rows.map(c => {
+    const na = nextAppt(c);
+    const sts = [...new Set(itemsOf(c).map(i => i.status).filter(Boolean))];
+    return `<div class="case" data-id="${esc(c.id)}">
+      <div class="row"><span><span class="seq">${esc(seqLabel(c))}</span></span><span class="money">${fmtMoney(c.damage)} ฿</span></div>
+      <div class="no">${esc(caseTitle(c))}</div>
+      <div class="muted">${esc(stationNames(c) || '—')} · ${itemsOf(c).filter(i => i.accNo).length} บัญชี</div>
+      ${c.admin ? `<div class="muted">ผู้รับผิดชอบ: <b style="color:var(--pri2)">${esc(c.admin)}</b></div>` : ''}
+      <div style="margin-top:6px">${(c.suspects || []).map(s => `<span class="chip ${NAT_CLS[s.nationality] || ''}">${esc(s.name || 'ไม่ระบุชื่อ')} · ${esc(natLabel(s))}</span>`).join('') || '<span class="muted">ยังไม่ระบุผู้ต้องหา</span>'}</div>
+      ${sts.length ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${sts.map(stChip).join('')}</div>` : ''}
+      ${na ? `<div class="appt-line">นัดถัดไป ${fmtDate(na.date)} ${esc(na.time || '')} — ${esc(apptText(na))}</div>` : ''}
+    </div>`;
+  }).join('') + '</div>';
+  el.querySelectorAll('.case').forEach(d => d.onclick = () => showDetail(d.dataset.id));
+}
+
+/* ---------- detail view ---------- */
+async function showDetail(id) {
+  window.scrollTo(0, 0);
+  let c = CASES.find(x => x.id === id);
+  if (!c) { try { c = await call('getCase', id); } catch (e) {} }
+  if (!c) { app.innerHTML = `<div class="empty">ไม่พบสำนวนนี้<br><br><button class="btn" onclick="showList()">← กลับหน้ารายการ</button></div>`; return; }
+  const t = todayStr();
+  const appts = (c.appointments || []).map((a, i) => Object.assign({ i }, a))
+    .sort((x, y) => (x.date + (x.time || '')).localeCompare(y.date + (y.time || '')));
+  const items = itemsOf(c);
+
+  app.innerHTML = `${demoBar()}
+  <div class="toolbar">
+    <button class="btn" onclick="showList()">← รายการ</button>
+    <h2><span class="seq" style="font-size:14px">${esc(seqLabel(c))}</span>${esc(caseTitle(c))}</h2>
+    <button class="btn" onclick="showForm('${esc(c.id)}')">แก้ไข</button>
+    <button class="btn dark" id="bCover">พิมพ์ปกสำนวน</button>
+    ${c.folderUrl ? `<a class="btn" href="${esc(c.folderUrl)}" target="_blank">โฟลเดอร์ Drive</a>` : ''}
+    <button class="btn danger" id="bDel">ลบ</button>
+  </div>
+  <div class="two">
+    <div>
+      <div class="card"><h3>ข้อมูลคดี</h3><dl class="info">
+        <dt>ลำดับสำนวน</dt><dd>${esc(seqLabel(c))}</dd>
+        <dt>เลขคดี</dt><dd>${esc(c.caseNo || '—')}</dd>
+        <dt>ผู้รับผิดชอบ</dt><dd>${esc(c.admin || '—')}</dd>
+        <dt>ยอดความเสียหาย</dt><dd><span class="money">${fmtMoney(c.damage)} บาท</span><div class="muted">(${bahtText(c.damage)})</div></dd>
+        ${c.notes ? `<dt>หมายเหตุ</dt><dd style="white-space:pre-wrap;font-weight:400">${esc(c.notes)}</dd>` : ''}
+      </dl></div>
+      <div class="card"><h3>สถานีตำรวจ + บัญชีธนาคาร</h3>${items.length ? `<div class="tbl"><table><thead><tr><th>#</th><th>สถานีตำรวจ / พนักงานสอบสวน</th><th>บัญชี</th><th>สถานะ</th></tr></thead><tbody>
+        ${items.map((i, k) => `<tr><td>${k + 1}</td>
+          <td><b>${esc(i.station || '—')}</b><div class="muted">${esc(i.investigator || '')}${i.caseRef ? ' · ' + esc(i.caseRef) : ''}${i.phone ? ` · <a href="tel:${esc(i.phone)}">${esc(i.phone)}</a>` : ''}</div></td>
+          <td><b style="font-variant-numeric:tabular-nums">${esc(i.accNo || '—')}</b><div class="muted">${esc(i.accName || '')}${bankLabel(i) ? ' · ' + esc(bankLabel(i)) : ''}</div></td>
+          <td><select data-k="${k}"><option value="">ยังไม่ดำเนินการ</option>${STATUSES.map(s => `<option ${s === i.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
+            ${i.statusDate ? `<div class="muted">${fmtDate(i.statusDate)}</div>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="muted">ยังไม่ระบุ</div>'}</div>
+      <div class="card"><h3>ผู้ต้องหา</h3>${(c.suspects || []).length ? `<div class="tbl"><table><thead><tr><th>ชื่อ</th><th>สัญชาติ</th><th>พาสปอร์ต / เลขบัตร</th></tr></thead><tbody>
+        ${c.suspects.map(s => `<tr><td>${esc(s.name)}</td><td><span class="chip ${NAT_CLS[s.nationality] || ''}">${esc(natLabel(s))}</span></td><td>${esc(s.passport || '—')}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="muted">ยังไม่ระบุ</div>'}</div>
+      <div class="card"><h3>นัดดำเนินการ</h3>
+        ${appts.length ? appts.map(a => `<div class="appt ${a.done ? 'done' : ''}">
+          <input type="checkbox" data-i="${a.i}" ${a.done ? 'checked' : ''} title="ทำเครื่องหมายว่าเสร็จแล้ว">
+          <div class="t"><b>${fmtDate(a.date)} ${esc(a.time || '')}</b>
+            ${!a.done && a.date && a.date < t ? '<span class="badge over">เลยกำหนด</span>' : ''}
+            <div>${esc(apptText(a))}</div></div></div>`).join('') : '<div class="muted">ยังไม่มีนัด — เพิ่มได้ที่ “แก้ไข”</div>'}
+      </div>
+    </div>
+    <div>
+      <div class="card qrbox"><h3>QR เปิดสำนวน</h3>
+        <div id="qr"></div>
+        <div style="margin-top:8px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+          <button class="btn sm" id="bQrDl">ดาวน์โหลด QR</button>
+          <button class="btn sm" id="bCopy">คัดลอกลิงก์</button>
+        </div>
+      </div>
+      <div class="card"><h3>เอกสาร (Google Drive)</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <label class="btn sm" style="margin:0;color:var(--text)">อัปโหลดไฟล์<input type="file" id="fUp" multiple hidden></label>
+          <button class="btn sm" id="bDoc">+ สร้าง Google Doc</button>
+        </div>
+        <div id="files" class="muted">กำลังโหลดเอกสาร…</div>
+      </div>
+      <div class="muted" style="text-align:center">สร้าง ${c.createdAt ? new Date(c.createdAt).toLocaleString('th-TH') : '—'}<br>แก้ไขล่าสุด ${c.updatedAt ? new Date(c.updatedAt).toLocaleString('th-TH') : '—'}${c.updatedBy ? ' โดย ' + esc(c.updatedBy) : ''}</div>
+    </div>
+  </div>`;
+
+  const url = caseUrl(c.id);
+  new QRCode(document.getElementById('qr'), { text: url, width: 340, height: 340, correctLevel: QRCode.CorrectLevel.M });
+  document.getElementById('bQrDl').onclick = () => { const a = document.createElement('a'); a.href = qrDataUrl(url, 800); a.download = 'QR-ลำดับ-' + c.seq + '-' + c.year + '.png'; a.click(); };
+  document.getElementById('bCopy').onclick = () => { navigator.clipboard.writeText(url).then(() => toast('คัดลอกลิงก์แล้ว'), () => prompt('คัดลอกลิงก์นี้', url)); };
+  document.getElementById('bCover').onclick = () => printCover(c);
+  document.getElementById('bDel').onclick = async () => {
+    if (!confirm(`ลบสำนวน${seqLabel(c)} (${caseTitle(c)})?\n(โฟลเดอร์เอกสารใน Drive จะยังอยู่)`)) return;
+    try { await call('deleteCase', c.id); await refresh(); toast('ลบแล้ว'); showList(); } catch (e) { toast('ลบไม่สำเร็จ: ' + errMsg(e)); }
+  };
+  const quickSave = async (msg, undo) => {
+    try { const saved = await call('saveCase', c); replaceCase(saved); showDetail(c.id); toast(msg); }
+    catch (e) { undo(); toast('บันทึกไม่สำเร็จ: ' + errMsg(e)); showDetail(c.id); }
+  };
+  app.querySelectorAll('select[data-k]').forEach(sel => sel.onchange = () => {
+    const it = c.items[+sel.dataset.k], old = [it.status, it.statusDate];
+    it.status = sel.value; it.statusDate = sel.value ? todayStr() : '';
+    quickSave('เปลี่ยนสถานะเป็น ' + (sel.value || 'ยังไม่ดำเนินการ'), () => { [it.status, it.statusDate] = old; });
+  });
+  app.querySelectorAll('.appt input[type=checkbox]').forEach(cb => cb.onchange = () => {
+    const a = c.appointments[+cb.dataset.i]; a.done = cb.checked;
+    quickSave(cb.checked ? 'บันทึกว่าเสร็จแล้ว' : 'ยกเลิกสถานะเสร็จ', () => { a.done = !cb.checked; });
+  });
+  document.getElementById('fUp').onchange = e => uploadFiles(c, e.target.files);
+  document.getElementById('bDoc').onclick = async () => {
+    const title = prompt('ชื่อเอกสาร', `บันทึก ${seqLabel(c)} ${c.caseNo ? 'คดี ' + c.caseNo : ''}`.trim()); if (!title) return;
+    toast('กำลังสร้างเอกสาร…', 8000);
+    try { renderFiles(await call('createDoc', c.id, title)); toast('สร้าง Google Doc แล้ว'); } catch (e) { toast('สร้างไม่สำเร็จ: ' + errMsg(e)); }
+  };
+  try { renderFiles(await call('listFiles', c.id)); } catch (e) { document.getElementById('files').textContent = 'โหลดเอกสารไม่สำเร็จ: ' + errMsg(e); }
+}
+
+function replaceCase(saved) { const i = CASES.findIndex(x => x.id === saved.id); if (i >= 0) CASES[i] = saved; else CASES.unshift(saved); }
+
+function renderFiles(files) {
+  const el = document.getElementById('files'); if (!el) return;
+  el.classList.remove('muted');
+  el.innerHTML = files.length ? files.map(f => `<div class="file"><span>${f.mime && f.mime.indexOf('google-apps.document') >= 0 ? '📝' : f.mime && f.mime.indexOf('image') === 0 ? '🖼' : f.mime === 'application/pdf' ? '📕' : '📄'}</span>
+    <a href="${esc(f.url)}" target="_blank">${esc(f.name)}</a></div>`).join('') : '<div class="muted">ยังไม่มีเอกสาร</div>';
+}
+
+async function uploadFiles(c, list) {
+  const files = [...list]; if (!files.length) return;
+  for (let k = 0; k < files.length; k++) {
+    const f = files[k];
+    if (f.size > 40 * 1024 * 1024) { toast(`${f.name} ใหญ่เกิน 40MB — อัปโหลดผ่าน Drive โดยตรงแทน`, 4000); continue; }
+    toast(`กำลังอัปโหลด ${k + 1}/${files.length}: ${f.name}`, 60000);
+    const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
+    try { renderFiles(await call('uploadFile', c.id, f.name, f.type, b64)); } catch (e) { toast('อัปโหลดไม่สำเร็จ: ' + errMsg(e), 4000); return; }
+  }
+  toast('อัปโหลดเสร็จแล้ว');
+}
+
+/* ---------- form ---------- */
+const opt = (list, v) => list.map(x => `<option ${x === v ? 'selected' : ''}>${esc(x)}</option>`).join('');
+const itemRow = (i = {}) => `<div class="rep r-item" data-sd="${esc(i.statusDate)}">
+  <div class="rep-head"><b class="set-no">ชุดที่</b><span style="display:flex;gap:6px">
+    <button type="button" class="btn sm dup" title="เพิ่มชุดใหม่โดยใช้สถานีเดิม">+ บัญชีอื่นในสถานีนี้</button>
+    <button type="button" class="btn sm rm">✕</button></span></div>
+  <div class="sub">สถานีตำรวจ</div>
+  <div class="fg">
+    <div><label>สถานีตำรวจ</label><input name="station" value="${esc(i.station)}" placeholder="เช่น สภ.พระประแดง"></div>
+    <div><label>พนักงานสอบสวน</label><input name="investigator" value="${esc(i.investigator)}" placeholder="ยศ ชื่อ สกุล"></div>
+    <div><label>เลขคดี / เลขประจำวัน (ตำรวจ)</label><input name="caseRef" value="${esc(i.caseRef)}"></div>
+    <div><label>เบอร์โทร</label><input name="phone" inputmode="tel" value="${esc(i.phone)}"></div>
+  </div>
+  <div class="sub">บัญชีธนาคาร</div>
+  <div class="fg">
+    <div><label>ชื่อบัญชี</label><input name="accName" value="${esc(i.accName)}"></div>
+    <div><label>ธนาคาร</label><select name="bank"><option value="">— เลือกธนาคาร —</option>${opt(BANKS, i.bank)}</select></div>
+    <div class="other" ${i.bank === 'อื่น ๆ' ? '' : 'hidden'}><label>ระบุธนาคาร</label><input name="bankOther" value="${esc(i.bankOther)}"></div>
+    <div><label>เลขที่บัญชี</label><input name="accNo" inputmode="numeric" value="${esc(i.accNo)}"></div>
+    <div><label>สถานะ</label><select name="status"><option value="">ยังไม่ดำเนินการ</option>${opt(STATUSES, i.status)}</select></div>
+    <div><label>วันที่ (ยึด/อายัด/ปลดอายัด)</label><input type="date" name="statusDate" value="${esc(i.statusDate)}"></div>
+  </div>
+</div>`;
+const suspectRow = (s = {}) => `<div class="rep r-suspect"><button type="button" class="btn sm rm">✕</button><div class="fg">
+  <div><label>ชื่อผู้ต้องหา</label><input name="name" value="${esc(s.name)}"></div>
+  <div><label>สัญชาติ</label><select name="nationality">${opt(NATS, s.nationality || 'จีน')}</select></div>
+  <div class="other" ${s.nationality === 'อื่น ๆ' ? '' : 'hidden'}><label>ระบุสัญชาติ</label><input name="nationalityOther" value="${esc(s.nationalityOther)}"></div>
+  <div><label>หมายเลขพาสปอร์ต / เลขบัตรประชาชน</label><input name="passport" value="${esc(s.passport)}"></div>
+</div></div>`;
+const apptRow = (a = {}) => `<div class="rep r-appt" data-done="${a.done ? 1 : ''}"><button type="button" class="btn sm rm">✕</button><div class="fg">
+  <div><label>วันที่นัด</label><input type="date" name="date" value="${esc(a.date)}"></div>
+  <div><label>เวลา</label><input type="time" name="time" value="${esc(a.time)}"></div>
+  <div><label>การดำเนินการ</label><select name="type"><option value="">— เลือก —</option>${opt(APPT_TYPES, a.type)}</select></div>
+  <div><label>รายละเอียดเพิ่มเติม</label><input name="detail" value="${esc(a.detail)}" placeholder="เช่น นำสำเนาสเตทเมนต์ไปด้วย"></div>
+</div></div>`;
+
+const adminOpts = v => `<option value="">— เลือกผู้รับผิดชอบ —</option>` + [...new Set([...ADMINS, ...(v ? [v] : [])])].map(a => `<option ${a === v ? 'selected' : ''}>${esc(a)}</option>`).join('');
+function showForm(id) {
+  window.scrollTo(0, 0);
+  const isNew = !id;
+  const src = isNew ? null : CASES.find(x => x.id === id);
+  const c = src ? JSON.parse(JSON.stringify(src)) : { year: thisBE(), items: [{}], suspects: [{ nationality: 'จีน' }], appointments: [{}] };
+  const nextNo = y => CASES.filter(x => x.year === Number(y)).reduce((m, x) => Math.max(m, x.seq), 0) + 1;
+  const by = thisBE();
+
+  app.innerHTML = `${demoBar()}
+  <div class="toolbar"><button class="btn" onclick="${isNew ? 'showList()' : `showDetail('${esc(c.id)}')`}">← ยกเลิก</button>
+    <h2>${isNew ? 'เพิ่มสำนวนใหม่' : 'แก้ไข ' + esc(seqLabel(c))}</h2></div>
+  <form id="frm">
+    <div class="card"><h3>ข้อมูลคดี</h3><div class="fg">
+      ${isNew ? `<div><label>ลำดับสำนวน (ออกอัตโนมัติ) — ปี พ.ศ.</label><select name="year">${[by + 1, by, by - 1, by - 2].map(y => `<option ${y === c.year ? 'selected' : ''}>${y}</option>`).join('')}</select>
+        <div class="muted" style="margin-top:4px">ลำดับที่จะได้: <b id="nextNo">${nextNo(c.year)}/${c.year}</b></div></div>`
+        : `<div><label>ลำดับสำนวน</label><input value="${esc(c.seq + '/' + c.year)}" disabled></div>`}
+      <div><label>เลขคดี <span class="req">*</span></label><input name="caseNo" value="${esc(c.caseNo)}" placeholder="กรอกเลขคดี เช่น 1234/2569"></div>
+      <div><label>ผู้รับผิดชอบสำนวน</label><select name="admin">${adminOpts(isNew ? (c.admin || CURRENT) : c.admin)}</select></div>
+      <div><label>ยอดเงินความเสียหาย (บาท)</label><input name="damage" inputmode="decimal" value="${c.damage ? fmtMoney(c.damage) : ''}"><div class="muted" id="dmgTxt" style="margin-top:4px"></div></div>
+    </div></div>
+    <div class="card"><div class="row"><h3>สถานีตำรวจ + บัญชีธนาคาร</h3><button type="button" class="btn sm primary" data-add="item">+ เพิ่มชุด สถานี + บัญชี</button></div>
+      <div id="items">${(itemsOf(c).length ? itemsOf(c) : [{}]).map(itemRow).join('')}</div></div>
+    <div class="card"><div class="row"><h3>ผู้ต้องหา</h3><button type="button" class="btn sm" data-add="suspect">+ เพิ่มผู้ต้องหา</button></div>
+      <div id="suspects">${(c.suspects || []).map(suspectRow).join('')}</div></div>
+    <div class="card"><div class="row"><h3>นัดดำเนินการ</h3><button type="button" class="btn sm" data-add="appt">+ เพิ่มนัด</button></div>
+      <div id="appts">${(c.appointments || []).map(apptRow).join('')}</div></div>
+    <div class="card"><h3>หมายเหตุ</h3><textarea name="notes" rows="3">${esc(c.notes)}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:30px">
+      <button class="btn primary" id="bSave" type="submit">บันทึก</button></div>
+  </form>`;
+
+  const frm = document.getElementById('frm');
+  const parseNum = s => Number(String(s || '').replace(/[^\d.]/g, '')) || 0;
+  const dmg = frm.elements.damage, dmgTxt = document.getElementById('dmgTxt');
+  const upd = () => dmgTxt.textContent = parseNum(dmg.value) ? '(' + bahtText(parseNum(dmg.value)) + ')' : '';
+  dmg.oninput = upd; dmg.onblur = () => { if (parseNum(dmg.value)) dmg.value = fmtMoney(parseNum(dmg.value)); }; upd();
+  if (isNew) frm.elements.year.onchange = e => document.getElementById('nextNo').textContent = nextNo(e.target.value) + '/' + e.target.value;
+  const renumber = () => frm.querySelectorAll('.r-item .set-no').forEach((b, k) => b.textContent = 'ชุดที่ ' + (k + 1));
+  renumber();
+
+  const adders = { item: ['items', itemRow], suspect: ['suspects', suspectRow], appt: ['appts', apptRow] };
+  frm.addEventListener('click', e => {
+    const add = e.target.closest('[data-add]');
+    if (add) { const [box, fn] = adders[add.dataset.add]; document.getElementById(box).insertAdjacentHTML('beforeend', fn()); renumber(); }
+    const dup = e.target.closest('.dup');
+    if (dup) {
+      const r = dup.closest('.r-item'), g = n => r.querySelector(`[name=${n}]`).value;
+      r.insertAdjacentHTML('afterend', itemRow({ station: g('station'), investigator: g('investigator'), caseRef: g('caseRef'), phone: g('phone') }));
+      renumber(); r.nextElementSibling.querySelector('[name=accName]').focus();
+    }
+    const rm = e.target.closest('.rm'); if (rm) { rm.closest('.rep').remove(); renumber(); }
+  });
+  frm.addEventListener('change', e => {
+    if (e.target.name === 'nationality' || e.target.name === 'bank')
+      e.target.closest('.rep').querySelector('.other').hidden = e.target.value !== 'อื่น ๆ';
+    if (e.target.name === 'status') { // ใส่วันที่วันนี้อัตโนมัติเมื่อเลือกสถานะ
+      const d = e.target.closest('.rep').querySelector('[name=statusDate]');
+      if (e.target.value && !d.value) d.value = todayStr();
+      if (!e.target.value) d.value = '';
+    }
+  });
+
+  frm.onsubmit = async e => {
+    e.preventDefault();
+    const v = (r, n) => ((r.querySelector(`[name=${n}]`) || {}).value || '').trim();
+    const caseNo = frm.elements.caseNo.value.trim();
+    if (!caseNo && !confirm('ยังไม่ได้กรอกเลขคดี — บันทึกไว้ก่อนหรือไม่?')) { frm.elements.caseNo.focus(); return; }
+    const dupCase = caseNo && CASES.find(x => x.id !== c.id && x.caseNo === caseNo);
+    if (dupCase && !confirm(`เลขคดี ${caseNo} มีอยู่แล้วใน${seqLabel(dupCase)} — บันทึกต่อหรือไม่?`)) return;
+    const data = Object.assign({}, src || {}, {
+      caseNo,
+      admin: frm.elements.admin.value.trim(),
+      damage: parseNum(dmg.value),
+      notes: frm.elements.notes.value.trim(),
+      items: [...frm.querySelectorAll('.r-item')].map(r => ({
+        station: v(r, 'station'), investigator: v(r, 'investigator'), caseRef: v(r, 'caseRef'), phone: v(r, 'phone'),
+        accName: v(r, 'accName'), bank: v(r, 'bank'), bankOther: v(r, 'bankOther'), accNo: v(r, 'accNo'),
+        status: v(r, 'status'), statusDate: v(r, 'statusDate') })).filter(i => i.station || i.investigator || i.accName || i.accNo),
+      suspects: [...frm.querySelectorAll('.r-suspect')].map(r => ({ name: v(r, 'name'), nationality: v(r, 'nationality'), nationalityOther: v(r, 'nationalityOther'), passport: v(r, 'passport') })).filter(s => s.name || s.passport),
+      appointments: [...frm.querySelectorAll('.r-appt')].map(r => ({ date: v(r, 'date'), time: v(r, 'time'), type: v(r, 'type'), detail: v(r, 'detail'), done: !!r.dataset.done })).filter(a => a.date || a.type || a.detail)
+    });
+    if (isNew) data.year = Number(frm.elements.year.value);
+    const btn = document.getElementById('bSave'); btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+    try {
+      const saved = await call('saveCase', data);
+      replaceCase(saved);
+      toast(isNew ? `บันทึกแล้ว — ${seqLabel(saved)}` : 'บันทึกแล้ว');
+      showDetail(saved.id);
+    } catch (err) { toast('บันทึกไม่สำเร็จ: ' + errMsg(err), 4000); btn.disabled = false; btn.textContent = 'บันทึก'; }
+  };
+}
+
+/* ---------- cover ---------- */
+function printCover(c) {
+  const qr = qrDataUrl(caseUrl(c.id), 600);
+  const w = window.open('', '_blank');
+  if (!w) { toast('เบราว์เซอร์บล็อกหน้าต่างใหม่ — กรุณาอนุญาต pop-up', 4000); return; }
+  const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+  const items = itemsOf(c).map((i, k) => `<tr><td>${k + 1}.</td><td>${esc(i.station || '-')}<br><small>${esc(i.investigator || '')}${i.caseRef ? ' · ' + esc(i.caseRef) : ''}</small></td><td>${esc(i.accNo || '-')}<br><small>${esc(i.accName || '')}${bankLabel(i) ? ' · ' + esc(bankLabel(i)) : ''}</small></td><td>${esc(i.status || '-')}</td></tr>`).join('') || '<tr><td colspan="4">-</td></tr>';
+  const sus = (c.suspects || []).map((s, i) => `<tr><td>${i + 1}.</td><td>${esc(s.name)}</td><td>${esc(natLabel(s))}</td><td>${esc(s.passport || '-')}</td></tr>`).join('') || '<tr><td colspan="4">-</td></tr>';
+  w.document.write(`<!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><title>ปกสำนวน ${esc(seqLabel(c))}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',sans-serif;color:#111;background:#888}
+.page{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:14mm}
+.frame{border:3px double #14532d;min-height:269mm;padding:10mm 13mm;display:flex;flex-direction:column}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.office{font-size:22pt;font-weight:700;color:#14532d;letter-spacing:2px}
+.seq{font-size:14pt;font-weight:700;background:#dcfce7;color:#14532d;border-radius:2mm;padding:1mm 4mm}
+.title{text-align:center;font-size:38pt;font-weight:700;margin:7mm 0 3mm;color:#14532d}
+.no{text-align:center;font-size:24pt;font-weight:700;border:2px solid #16a34a;display:inline-block;padding:2mm 12mm;border-radius:3mm}
+.center{text-align:center}
+table{width:100%;border-collapse:collapse;font-size:13pt}
+.kv td{padding:2mm 0;border-bottom:1px dotted #999}
+.kv td:first-child{width:45mm;font-weight:600}
+h4{font-size:15pt;margin:6mm 0 2mm;color:#14532d;border-bottom:2px solid #14532d;padding-bottom:1mm}
+.lst td{padding:1.2mm 2mm 1.2mm 0;vertical-align:top;border-bottom:1px dotted #ccc}
+.lst td:first-child{width:8mm}
+.lst small{font-size:11pt;color:#444}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;padding-top:6mm}
+.qr{text-align:center;font-size:11pt}
+.qr img{width:34mm;height:34mm;display:block;margin:0 auto 1mm}
+.sign{font-size:13pt;line-height:2.2}
+@media print{body{background:#fff}.page{margin:0}}
+</style></head><body><div class="page"><div class="frame">
+<div class="top"><div class="office">สำนักงาน PAW</div><div class="seq">${esc(seqLabel(c))}</div></div>
+<div class="title">สำนวนคดี</div>
+<div class="center"><span class="no">${esc(caseTitle(c))}</span></div>
+<table class="kv" style="margin-top:6mm">
+<tr><td>ยอดความเสียหาย</td><td>${fmtMoney(c.damage)} บาท (${bahtText(c.damage)})</td></tr>
+</table>
+<h4>สถานีตำรวจ + บัญชีธนาคาร</h4>
+<table class="lst"><tr style="font-weight:600"><td></td><td>สถานีตำรวจ / พนักงานสอบสวน</td><td>บัญชี</td><td>สถานะ</td></tr>${items}</table>
+<h4>ผู้ต้องหา</h4>
+<table class="lst"><tr style="font-weight:600"><td></td><td>ชื่อ</td><td>สัญชาติ</td><td>พาสปอร์ต / เลขบัตร</td></tr>${sus}</table>
+<div class="foot">
+  <div class="sign">ผู้รับผิดชอบสำนวน ${c.admin ? '<b>' + esc(c.admin) + '</b>' : '....................................................'}<br>วันที่พิมพ์ ${today}</div>
+  <div class="qr"><img src="${qr}">สแกนเพื่อเปิดสำนวน</div>
+</div>
+</div></div>
+<script>(document.fonts ? document.fonts.ready : Promise.resolve()).then(function(){ setTimeout(function(){ window.print(); }, 400); });<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+/* ---------- จัดการผู้ใช้ (ADMIN เท่านั้น) ---------- */
+const roleLabel = r => r === 'admin' ? 'ADMIN' : 'เจ้าหน้าที่';
+const roleOpts = v => ['user', 'admin'].map(r => `<option value="${r}" ${r === v ? 'selected' : ''}>${roleLabel(r)}</option>`).join('');
+function showAdmins() {
+  if (!isAdmin()) { toast('เฉพาะ ADMIN เท่านั้น', 3000); showList(); return; }
+  window.scrollTo(0, 0);
+  const count = n => CASES.filter(c => c.admin === n).length;
+  app.innerHTML = `${demoBar()}
+  <div class="toolbar"><button class="btn" onclick="showList()">← รายการ</button><h2>จัดการผู้ใช้</h2></div>
+  <div class="card"><h3>สร้างผู้ใช้ใหม่</h3>
+    <form id="admFrm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;align-items:end">
+      <div><label>ชื่อผู้ใช้ (ห้ามซ้ำ)</label><input name="n" required autocomplete="off"></div>
+      <div><label>รหัสผ่าน (อย่างน้อย 6 ตัว)</label><input name="p" type="password" required autocomplete="new-password"></div>
+      <div><label>ยืนยันรหัสผ่าน</label><input name="p2" type="password" required autocomplete="new-password"></div>
+      <div><label>สิทธิ์</label><select name="r">${roleOpts('user')}</select></div>
+      <div><button class="btn primary" style="width:100%;justify-content:center">สร้าง</button></div>
+    </form>
+    <div class="muted" style="margin-top:8px"><b>ADMIN</b> สร้าง/แก้/ลบผู้ใช้ และตั้งรหัสผ่านได้ · <b>เจ้าหน้าที่</b> ใช้งานสำนวนได้ แต่สร้างชื่อหรือเปลี่ยนรหัสผ่านเองไม่ได้</div>
+  </div>
+  <div class="card"><h3>ผู้ใช้ทั้งหมด (${ADMINS.length})</h3>
+    ${ADMINS.map((a, i) => `<div class="adm"><b>${esc(a)}</b>
+      ${a === CURRENT ? '<span class="st release">คุณ</span>' : ''}${NOPW.has(a) ? '<span class="st seize">ยังไม่มีรหัสผ่าน</span>' : ''}
+      <span class="muted">${count(a)} สำนวน</span>
+      <select data-role="${i}" style="width:auto;padding:3px 6px;font-size:13px">${roleOpts(ROLES[a])}</select>
+      <button class="btn sm" data-pw="${i}">${NOPW.has(a) ? 'ตั้งรหัสผ่าน' : 'เปลี่ยนรหัสผ่าน'}</button>
+      <button class="btn sm" data-ren="${i}">แก้ชื่อ</button>
+      ${a === CURRENT ? '' : `<button class="btn sm danger" data-del="${i}">ลบ</button>`}</div>
+      <form class="pwf" data-for="${i}" style="display:none;gap:6px;flex-wrap:wrap;padding:8px 0">
+        <input name="p" type="password" placeholder="รหัสผ่านใหม่ของ ${esc(a)}" autocomplete="new-password" style="flex:1;min-width:150px" required>
+        <input name="p2" type="password" placeholder="ยืนยันรหัสผ่าน" autocomplete="new-password" style="flex:1;min-width:150px" required>
+        <button class="btn primary sm">บันทึก</button></form>`).join('')}
+  </div>`;
+  const run = async (p, msg) => { try { setAdmins(await p); await refresh(); renderHdr(); toast(msg); isAdmin() ? showAdmins() : showList(); return true; } catch (e) { toast(errMsg(e), 4000); showAdmins(); return false; } };
+  const pwOk = (p, p2) => { if (p !== p2) { toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 3000); return false; } return true; };
+  document.getElementById('admFrm').onsubmit = e => {
+    e.preventDefault(); const f = e.target, n = f.n.value.trim();
+    if (pwOk(f.p.value, f.p2.value)) run(call('addAdmin', n, f.p.value, f.r.value), 'สร้างผู้ใช้ ' + n + ' (' + roleLabel(f.r.value) + ') แล้ว');
+  };
+  app.querySelectorAll('[data-role]').forEach(sel => sel.onchange = () => {
+    const n = ADMINS[+sel.dataset.role];
+    if (n === CURRENT && sel.value !== 'admin' && !confirm('ลดสิทธิ์ตัวเองเป็นเจ้าหน้าที่? คุณจะจัดการผู้ใช้ไม่ได้อีก')) { sel.value = 'admin'; return; }
+    run(call('setRole', n, sel.value), n + ' เป็น ' + roleLabel(sel.value) + ' แล้ว');
+  });
+  app.querySelectorAll('[data-pw]').forEach(b => b.onclick = () => { const f = app.querySelector(`.pwf[data-for="${b.dataset.pw}"]`); const show = f.style.display === 'none'; f.style.display = show ? 'flex' : 'none'; if (show) f.p.focus(); });
+  app.querySelectorAll('.pwf').forEach(f => f.onsubmit = e => {
+    e.preventDefault(); const n = ADMINS[+f.dataset.for];
+    if (pwOk(f.p.value, f.p2.value)) run(call('setPassword', n, f.p.value), 'บันทึกรหัสผ่านของ ' + n + ' แล้ว');
+  });
+  app.querySelectorAll('[data-ren]').forEach(b => b.onclick = async () => {
+    const o = ADMINS[+b.dataset.ren], n = prompt('แก้ชื่อ ' + o + ' เป็น', o);
+    if (!n || n.trim() === o) return;
+    const self = o === CURRENT;
+    if (self) { CURRENT = n.trim(); lsSet('paw_user', CURRENT); }
+    if (!await run(call('renameAdmin', o, n), 'แก้ชื่อแล้ว (สำนวนที่รับผิดชอบเปลี่ยนตามด้วย)') && self) { CURRENT = o; lsSet('paw_user', o); renderHdr(); }
+  });
+  app.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const n = ADMINS[+b.dataset.del];
+    if (confirm('ลบผู้ใช้ ' + n + '?\n(เข้าระบบไม่ได้อีก แต่สำนวนเดิมยังแสดงชื่อนี้อยู่)')) run(call('removeAdmin', n), 'ลบแล้ว');
+  });
+}
+
+/* ---------- เข้าสู่ระบบ ---------- */
+async function enter() {
+  await refresh();
+  const id = BOOT.caseId; BOOT.caseId = '';
+  if (id) showDetail(id); else showList();
+}
+function authForm(title, note, setup, msg) {
+  renderHdr();
+  app.innerHTML = `${demoBar()}<div class="card login"><h3>${title}</h3>
+    ${note ? `<div class="muted">${note}</div>` : ''}${msg ? `<div class="demo" style="margin-top:8px">${esc(msg)}</div>` : ''}
+    <form id="lf">
+      <label>ชื่อผู้ใช้</label><input name="n" required autocomplete="username" value="${setup ? '' : esc(lsGet('paw_user_last'))}">
+      <label>รหัสผ่าน${setup ? ' (อย่างน้อย 6 ตัว)' : ''}</label><input name="p" type="password" required autocomplete="${setup ? 'new-password' : 'current-password'}">
+      ${setup ? '<label>ยืนยันรหัสผ่าน</label><input name="p2" type="password" required autocomplete="new-password">' : ''}
+      <button class="btn primary" style="margin-top:14px;width:100%;justify-content:center">${setup ? 'สร้างและเข้าสู่ระบบ' : 'เข้าสู่ระบบ'}</button>
+    </form>
+    ${setup ? '' : '<div class="muted" style="margin-top:10px">ลืมรหัสผ่าน หรือยังไม่มีบัญชี — กรุณาติดต่อ ADMIN</div>'}</div>`;
+  const f = document.getElementById('lf');
+  (f.n.value ? f.p : f.n).focus();
+  f.onsubmit = async e => {
+    e.preventDefault();
+    if (setup && f.p.value !== f.p2.value) { toast('รหัสผ่านทั้งสองช่องไม่ตรงกัน', 3000); return; }
+    const btn = f.querySelector('button'); btn.disabled = true;
+    try { startSession(await pub(setup ? 'setupFirst' : 'login', f.n.value.trim(), f.p.value)); await enter(); }
+    catch (err) { toast(errMsg(err), 4000); btn.disabled = false; f.p.value = ''; f.p.focus(); }
+  };
+}
+const showLogin = msg => authForm('เข้าสู่ระบบ PAW', '', false, msg);
+const showSetup = () => authForm('ตั้งค่าครั้งแรก', 'สร้าง ADMIN คนแรกพร้อมรหัสผ่าน — ผู้ใช้คนอื่น ADMIN จะเป็นผู้สร้างให้ที่เมนู “จัดการผู้ใช้”', true);
+
+/* ---------- start ---------- */
+(async () => {
+  renderHdr();
+  try {
+    if (TOKEN) { try { await enter(); return; } catch (e) { endSession(); } }
+    const b = await pub('bootstrap');
+    if (b.needsSetup) showSetup(); else showLogin();
+  } catch (e) {
+    app.innerHTML = `<div class="empty">โหลดข้อมูลไม่สำเร็จ: ${esc(errMsg(e))}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
